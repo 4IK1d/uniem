@@ -165,8 +165,10 @@ def create_uniem_embedder(
     model_name_or_path: str,
     model_class: str | None = None,
     pooling_strategy: PoolingStrategy | str = PoolingStrategy.last_mean,
+    trust_remote_code: str = False
 ):
-    pretrained_model = load_hf_pretrained_model(model_name_or_path, model_class=model_class)
+    pretrained_model = load_hf_pretrained_model(model_name_or_path, model_class=model_class, 
+    trust_remote_code=trust_remote_code)
     embedder_cls = StrategyEmbedderClsMap[PoolingStrategy(pooling_strategy)]
     embedder = embedder_cls(pretrained_model)
     return embedder
