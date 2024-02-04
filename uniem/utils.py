@@ -83,7 +83,8 @@ ConfigFile = Annotated[
 
 
 def load_hf_pretrained_model(
-    model_name_or_path: str, model_class: str | None | Type[PreTrainedModel] | Type[AutoModel] = None
+    model_name_or_path: str, model_class: str | None | Type[PreTrainedModel] | Type[AutoModel] = None,
+    trust_remote_code: str | None = None
 ) -> PreTrainedModel:
     if model_class is None:
         model_class = AutoModel
@@ -91,7 +92,7 @@ def load_hf_pretrained_model(
         transformers_module = importlib.import_module('transformers')
         model_class = getattr(transformers_module, model_class)
 
-    model = model_class.from_pretrained(model_name_or_path)  # type: ignore
+    model = model_class.from_pretrained(model_name_or_path, trust_remote_code=trust_remote_code)  # type: ignore
     model = cast(PreTrainedModel, model)
     return model
 
