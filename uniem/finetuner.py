@@ -11,7 +11,7 @@ from accelerate.utils import LoggerType, ProjectConfiguration, set_seed
 from datasets import Dataset as HFDataset
 from datasets import IterableDataset as HFIterableDataset
 from torch.utils.data import DataLoader
-from transformers import AutoTokenizer, get_cosine_schedule_with_warmup  # type: ignore
+from transformers import AutoModel, AutoTokenizer, get_cosine_schedule_with_warmup, PreTrainedTokenizer  # type: ignore
 
 from uniem.data import (
     FinetuneDataset,
@@ -97,6 +97,9 @@ class FineTuner:
         dataset: SupportedDatasetDict | SupportedDataset,
         model_type: ModelType | str | None = None,
         record_type: RecordType | str | None = None,
+        model_class: str | None = None,
+        tokenizer_class: PreTrainedTokenizer | None = AutoTokenizer,
+        trust_remote_code: bool = False
     ):
         if model_type is None:
             if 'sentence-transformers' in model_name_or_path:
@@ -116,8 +119,15 @@ class FineTuner:
                 embedder = UniemEmbedder.from_pretrained(model_name_or_path)
                 tokenizer = AutoTokenizer.from_pretrained(model_name_or_path)
             case ModelType.huggingface | ModelType.text2vec:
-                embedder = create_uniem_embedder(model_name_or_path)
-                tokenizer = AutoTokenizer.from_pretrained(model_name_or_path)
+                embedder = create_uniem_embedder(model_name_or_path, model_class=model_class, trust_remote_code=trust_remote_code)
+                # model = AutoModel.from_pretrained(model_name_or_path, trust_remote_code=trust_remote_code)  # type: ignore
+                # model = cast(PreTrainedModel, model)
+                # embedder_cls = StrategyEmbedderClsMap[PoolingStrategy(pooling_strategy)]
+                # embedder = embedder_cls(pretrained_model)
+                if tokenizer_class:
+                  tokenizer = tokenizer_class.from_pretrained("bert-base-uncased", trust_remote_code=trust_remote_code)
+                else:
+                  tokenizer = AutoTokenizer.from_pretrained(model_name_or_path, trust_remote_code=trust_remote_code)
             case ModelType.sentence_transformers:
                 try:
                     from uniem.integration.sentence_transformers_wrapper import SentenceTransformerWrapper
